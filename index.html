@@ -72,7 +72,8 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzV3ZI3DN0km1TOfOMxc_9fqvxzZMZ_HoXr0PpHqfax4MXWiNWjE3SwVLb5t6bCmnM/exec
+    // تم إغلاق علامة التنصيص بالشكل الصحيح
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzV3ZI3DN0km1TOfOMxc_9fqvxzZMZ_HoXr0PpHqfax4MXWiNWjE3SwVLb5t6bCmnM/exec";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB5-N26tSSLfTyru_NMpSbJ97yKxcxb2PU",
@@ -85,11 +86,18 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // إعداد الإشعارات أوتوماتيكياً
+    // طلب الإذن واشتراك جهاز الموبايل أوتوماتيكياً في قناة all_orders
     Notification.requestPermission().then((permission) => {
       if (permission === 'granted') {
         messaging.getToken().then((token) => {
           console.log('Token ready:', token);
+          fetch(`https://iid.googleapis.com/iid/v1/${token}/rel/topics/all_orders`, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'key=BEyENWMNZy8u5eaOSenFuRTWeEVbIJzRKWYgmZdujJ3BPUxHleJOrNTn_WQwxJlgjjzrrUbn52LIvzSzHsVC_xg',
+              'Content-Type': 'application/json'
+            }
+          });
         });
       }
     });
