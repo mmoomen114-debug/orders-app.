@@ -6,31 +6,26 @@
   <title>نظام الأوردرات</title>
   <style>
     body { font-family: system-ui, sans-serif; margin: 0; padding: 15px; background: #f4f6f9; direction: rtl; }
-    .nav { display: flex; gap: 10px; margin-bottom: 20px; }
+    .nav { display: flex; gap: 10px; margin-bottom: 15px; }
     .nav button { flex: 1; padding: 12px; border: none; background: #e0e0e0; font-weight: bold; border-radius: 8px; cursor: pointer; }
     .nav button.active { background: #007bff; color: white; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
-    
-    /* شريط تفاصيل التحويل العلوية */
-    .order-summary-header { background: #e8f0fe; border-right: 5px solid #1a73e8; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-    .summary-title { font-size: 14px; color: #555; margin-bottom: 4px; }
-    .summary-value { font-size: 18px; font-weight: bold; color: #1a73e8; }
-    
-    label { font-weight: bold; margin-top: 10px; display: block; color: #333; }
-    input, textarea, button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
-    .submit-btn { background: #28a745; color: white; font-weight: bold; border: none; margin-top: 15px; font-size: 16px; }
-    
-    .order-item { background: white; padding: 15px; border-radius: 10px; border-right: 5px solid #ffc107; margin-bottom: 10px; cursor: pointer; }
+    .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .order-summary-header { background: #e8f0fe; border-right: 5px solid #1a73e8; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+    .summary-title { font-size: 13px; color: #555; }
+    .summary-value { font-size: 16px; font-weight: bold; color: #1a73e8; }
+    label { font-weight: bold; margin-top: 10px; display: block; color: #333; font-size: 14px; }
+    input, textarea, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+    .submit-btn { background: #28a745; color: white; font-weight: bold; border: none; margin-top: 15px; font-size: 16px; cursor: pointer; }
+    .order-item { background: white; padding: 12px; border-radius: 10px; border-right: 5px solid #ffc107; margin-bottom: 10px; cursor: pointer; }
     .order-item.done { border-right-color: #28a745; }
     .order-header { display: flex; justify-content: space-between; font-weight: bold; }
-    .badge { padding: 4px 8px; border-radius: 5px; font-size: 12px; color: white; }
+    .badge { padding: 3px 6px; border-radius: 5px; font-size: 11px; color: white; }
     .badge.pending { background: #ffc107; color: #000; }
     .badge.completed { background: #28a745; }
-    
-    .image-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-    .image-gallery img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+    .image-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .image-gallery img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
   </style>
 </head>
 <body>
@@ -40,14 +35,11 @@
     <button id="tab2-btn" onclick="switchTab('tab2'); loadOrders();">سجل الأوردرات 📋</button>
   </div>
 
-  <!-- صفحة التعديل -->
   <div id="tab1" class="tab-content active">
     <div class="card">
-      
-      <!-- هيدر تفاصيل التحويل العلوي -->
       <div class="order-summary-header">
         <div class="summary-title">اسم المحوّل: <span id="headerName" class="summary-value">غير محدد</span></div>
-        <div class="summary-title" style="margin-top: 6px;">المبلغ المستلم: <span id="headerAmount" class="summary-value" style="color: #28a745;">0 جنيه</span></div>
+        <div class="summary-title" style="margin-top: 4px;">المبلغ المستلم: <span id="headerAmount" class="summary-value" style="color: #28a745;">0 جنيه</span></div>
       </div>
 
       <label>رقم الصف (Row ID):</label>
@@ -57,10 +49,10 @@
       <input type="text" id="address" placeholder="عنوان العميل">
 
       <label>تفاصيل الأوردر:</label>
-      <textarea id="orderDetails" rows="3" placeholder="المنتجات والكميات"></textarea>
+      <textarea id="orderDetails" rows="2" placeholder="المنتجات والكميات"></textarea>
 
       <label>الصور المرفوعة سابقاً:</label>
-      <div id="previewImages" class="image-gallery">لا توجد صور مرفوعة</div>
+      <div id="previewImages" class="image-gallery">لا توجد صور</div>
 
       <label>إرفاق صور جديدة:</label>
       <input type="file" id="images" multiple accept="image/*">
@@ -80,9 +72,8 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsEYvS6pLyeagRm4qQS-HBsMBus6P6WGPyf-t4LnkPeUzdozBfWniRW7h8HotTZw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNqW3lhu2xJktn6J7DfJZrliIpWH2L0QaVPXv8_bsp98dFbWZLnZD-QS-AvWZKUdU/exec;
 
-    // إعدادات Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB5-N26tSSLfTyru_NMpSbJ97yKxcxb2PU",
       authDomain: "ordersnotification-9e391.firebaseapp.com",
@@ -94,25 +85,14 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // طلب الإذن واشتراك الجهاز أوتوماتيكياً في قناة all_orders
-    function initNotifications() {
-      Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-          messaging.getToken().then((token) => {
-            console.log('FCM Token:', token);
-            fetch(`https://iid.googleapis.com/iid/v1/${token}/rel/topics/all_orders`, {
-              method: 'POST',
-              headers: {
-                'Authorization': 'key=BEyENWMNZy8u5eaOSenFuRTWeEVbIJzRKWYgmZdujJ3BPUxHleJOrNTn_WQwxJlgjjzrrUbn52LIvzSzHsVC_xg',
-                'Content-Type': 'application/json'
-              }
-            });
-          });
-        }
-      });
-    }
-
-    initNotifications();
+    // إعداد الإشعارات أوتوماتيكياً
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        messaging.getToken().then((token) => {
+          console.log('Token ready:', token);
+        });
+      }
+    });
 
     messaging.onMessage((payload) => {
       alert(`🚨 ${payload.notification.title}\n${payload.notification.body}`);
@@ -132,7 +112,7 @@
 
     async function loadOrders() {
       const container = document.getElementById('ordersList');
-      container.innerHTML = "جاري التحميل...";
+      container.innerHTML = "جاري التحميل السريع...";
 
       try {
         const res = await fetch(SCRIPT_URL);
@@ -149,7 +129,7 @@
               <span>صف #${item.rowIndex} - ${item.amount} جنيه</span>
               <span class="badge ${isDone ? 'completed' : 'pending'}">${isDone ? 'تم المعالجة' : 'معلقة'}</span>
             </div>
-            <div style="font-size: 13px; color: #666; margin-top: 5px;">
+            <div style="font-size: 12px; color: #666; margin-top: 4px;">
               الاسم: ${item.name || 'غير مسجل'} | المحول: ${item.phone || '-'} <br>
               التاريخ: ${item.date}
             </div>
@@ -157,7 +137,7 @@
           container.appendChild(div);
         });
       } catch (err) {
-        container.innerHTML = "حدث خطأ في جلب البيانات.";
+        container.innerHTML = "حدث خطأ في تحميل البيانات.";
       }
     }
 
@@ -165,15 +145,13 @@
       document.getElementById('rowIndex').value = item.rowIndex;
       document.getElementById('address').value = item.address || '';
       document.getElementById('orderDetails').value = item.orderDetails || '';
-      
       document.getElementById('headerName').innerText = item.name || 'غير مسجل';
       document.getElementById('headerAmount').innerText = (item.amount || '0') + ' جنيه';
 
       const gallery = document.getElementById('previewImages');
       gallery.innerHTML = "";
       if(item.imageUrls) {
-        const urls = item.imageUrls.split('\n');
-        urls.forEach(url => {
+        item.imageUrls.split('\n').forEach(url => {
           if(url.trim()) {
             const img = document.createElement('img');
             img.src = url;
@@ -181,7 +159,7 @@
           }
         });
       } else {
-        gallery.innerHTML = "لا توجد صور مرفوعة";
+        gallery.innerHTML = "لا توجد صور";
       }
 
       switchTab('tab1');
@@ -193,13 +171,9 @@
       if(!rowIndex) return alert('برجاء تحديد رقم الصف أولاً');
 
       btn.disabled = true;
-      btn.innerText = "جاري الحفظ والرفع...";
+      btn.innerText = "جاري الحفظ السريع...";
 
-      const address = document.getElementById('address').value;
-      const orderDetails = document.getElementById('orderDetails').value;
-      const notes = document.getElementById('notes').value;
       const files = document.getElementById('images').files;
-
       let imagesBase64 = [];
       for(let file of files) {
         const base64 = await toBase64(file);
@@ -209,9 +183,9 @@
       const payload = {
         action: "UPDATE_ORDER",
         rowIndex: rowIndex,
-        address: address,
-        orderDetails: orderDetails,
-        notes: notes,
+        address: document.getElementById('address').value,
+        orderDetails: document.getElementById('orderDetails').value,
+        notes: document.getElementById('notes').value,
         images: imagesBase64
       };
 
@@ -219,7 +193,7 @@
         const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
         const data = await response.json();
         if(data.status === 'success') {
-          alert('تم الحفظ والتحديث بنجاح! 🎉');
+          alert('تم الحفظ بنجاح! 🎉');
         }
       } catch (err) {
         alert('حدث خطأ: ' + err.message);
