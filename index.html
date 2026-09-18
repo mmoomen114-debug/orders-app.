@@ -9,35 +9,47 @@
     .nav { display: flex; gap: 10px; margin-bottom: 20px; }
     .nav button { flex: 1; padding: 12px; border: none; background: #e0e0e0; font-weight: bold; border-radius: 8px; cursor: pointer; }
     .nav button.active { background: #007bff; color: white; }
-    
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    
     .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
+    
+    /* شريط تفاصيل التحويل العلوية */
+    .order-summary-header { background: #e8f0fe; border-right: 5px solid #1a73e8; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+    .summary-title { font-size: 14px; color: #555; margin-bottom: 4px; }
+    .summary-value { font-size: 18px; font-weight: bold; color: #1a73e8; }
+    
     label { font-weight: bold; margin-top: 10px; display: block; color: #333; }
     input, textarea, button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
     .submit-btn { background: #28a745; color: white; font-weight: bold; border: none; margin-top: 15px; font-size: 16px; }
     
-    /* تنسيق قائمة الأوردرات */
-    .order-item { background: white; padding: 15px; border-radius: 10px; border-right: 5px solid #ffc107; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
+    .order-item { background: white; padding: 15px; border-radius: 10px; border-right: 5px solid #ffc107; margin-bottom: 10px; cursor: pointer; }
     .order-item.done { border-right-color: #28a745; }
     .order-header { display: flex; justify-content: space-between; font-weight: bold; }
     .badge { padding: 4px 8px; border-radius: 5px; font-size: 12px; color: white; }
     .badge.pending { background: #ffc107; color: #000; }
     .badge.completed { background: #28a745; }
+    
+    .image-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .image-gallery img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
   </style>
 </head>
 <body>
 
-  <!-- شريط التنقل بين الصفحات -->
   <div class="nav">
     <button id="tab1-btn" class="active" onclick="switchTab('tab1')">تعديل أوردر 📝</button>
     <button id="tab2-btn" onclick="switchTab('tab2'); loadOrders();">سجل الأوردرات 📋</button>
   </div>
 
-  <!-- الصفحة الأولى: تعديل وتحديث الأوردر -->
+  <!-- صفحة التعديل -->
   <div id="tab1" class="tab-content active">
     <div class="card">
+      
+      <!-- هيدر تفاصيل التحويل العلوي -->
+      <div class="order-summary-header">
+        <div class="summary-title">اسم المحوّل: <span id="headerName" class="summary-value">غير محدد</span></div>
+        <div class="summary-title" style="margin-top: 6px;">المبلغ المستلم: <span id="headerAmount" class="summary-value" style="color: #28a745;">0 جنيه</span></div>
+      </div>
+
       <label>رقم الصف (Row ID):</label>
       <input type="number" id="rowIndex" placeholder="رقم الصف">
 
@@ -47,7 +59,10 @@
       <label>تفاصيل الأوردر:</label>
       <textarea id="orderDetails" rows="3" placeholder="المنتجات والكميات"></textarea>
 
-      <label>إرفاق صور:</label>
+      <label>الصور المرفوعة سابقاً:</label>
+      <div id="previewImages" class="image-gallery">لا توجد صور مرفوعة</div>
+
+      <label>إرفاق صور جديدة:</label>
       <input type="file" id="images" multiple accept="image/*">
 
       <label>ملاحظات:</label>
@@ -57,30 +72,47 @@
     </div>
   </div>
 
-  <!-- الصفحة الثانية: عرض جميع الأوردرات -->
   <div id="tab2" class="tab-content">
     <div id="ordersList">جاري تحميل الأوردرات...</div>
   </div>
 
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMSV_K8gWecbwqkiK2TD95mXhtSHUg5j-jYiybiNPkwAVgeq4IZZcG3yf2rUyi5mE/exec"; // ضع رابط Apps Script هنا
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
-    // التبديل بين التبويبات
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOGwMYbe7F3uvuVmvHrNPd8HtO_UwcrE4O7ZiohlT6dLLBqSQ7k8Ev8ntuLVXH4Q/exec"; // ضع رابط Apps Script هنا
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB5-N26tSSLfTyru_NMpSbJ97yKxcxb2PU",
+      authDomain: "ordersnotification-9e391.firebaseapp.com",
+      projectId: "ordersnotification-9e391",
+      storageBucket: "ordersnotification-9e391.firebasestorage.app",
+      messagingSenderId: "607431555434",
+      appId: "1:607431555434:web:7b25ea474fdb2fe7f8cd13"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    Notification.requestPermission().then((perm) => {
+      if (perm === 'granted') messaging.getToken().then(t => console.log('FCM Token:', t));
+    });
+
+    messaging.onMessage((payload) => {
+      alert(`🚨 ${payload.notification.title}\n${payload.notification.body}`);
+    });
+
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
-      
       document.getElementById(tabId).classList.add('active');
       document.getElementById(tabId + '-btn').classList.add('active');
     }
 
-    // جلب رقم الصف من الرابط إذا قادم من إشعار
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.has('row')) {
       document.getElementById('rowIndex').value = urlParams.get('row');
     }
 
-    // جلب كافة الأوردرات وعرضها
     async function loadOrders() {
       const container = document.getElementById('ordersList');
       container.innerHTML = "جاري التحميل...";
@@ -88,19 +120,13 @@
       try {
         const res = await fetch(SCRIPT_URL);
         const data = await res.json();
-        
         container.innerHTML = "";
-        if(data.length === 0) {
-          container.innerHTML = "<p>لا يوجد أوردرات مسجلة.</p>";
-          return;
-        }
-
+        
         data.reverse().forEach(item => {
           const isDone = item.status.includes("تم المعالجة");
           const div = document.createElement('div');
           div.className = `order-item ${isDone ? 'done' : ''}`;
-          div.onclick = () => selectOrder(item.rowIndex);
-          
+          div.onclick = () => selectOrder(item);
           div.innerHTML = `
             <div class="order-header">
               <span>صف #${item.rowIndex} - ${item.amount} جنيه</span>
@@ -118,9 +144,29 @@
       }
     }
 
-    // عند الضغط على أوردر في القائمة يُفتح للتعديل تلقائياً
-    function selectOrder(rowIndex) {
-      document.getElementById('rowIndex').value = rowIndex;
+    function selectOrder(item) {
+      document.getElementById('rowIndex').value = item.rowIndex;
+      document.getElementById('address').value = item.address || '';
+      
+      // تحديث بيانات الهيدر العلوية (الاسم والمبلغ)
+      document.getElementById('headerName').innerText = item.name || 'غير مسجل';
+      document.getElementById('headerAmount').innerText = (item.amount || '0') + ' جنيه';
+
+      const gallery = document.getElementById('previewImages');
+      gallery.innerHTML = "";
+      if(item.imageUrls) {
+        const urls = item.imageUrls.split('\n');
+        urls.forEach(url => {
+          if(url.trim()) {
+            const img = document.createElement('img');
+            img.src = url;
+            gallery.appendChild(img);
+          }
+        });
+      } else {
+        gallery.innerHTML = "لا توجد صور مرفوعة";
+      }
+
       switchTab('tab1');
     }
 
@@ -130,7 +176,7 @@
       if(!rowIndex) return alert('برجاء تحديد رقم الصف أولاً');
 
       btn.disabled = true;
-      btn.innerText = "جاري الحفظ...";
+      btn.innerText = "جاري الحفظ والرفع...";
 
       const address = document.getElementById('address').value;
       const orderDetails = document.getElementById('orderDetails').value;
