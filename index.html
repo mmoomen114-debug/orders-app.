@@ -80,8 +80,9 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsEYvS6pLyeagRm4qQS-HBsMBus6P6WGPyf-t4LnkPeUzdozBfWniRW7h8HotTZw/exec"; // ضع رابط Apps Script هنا
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsEYvS6pLyeagRm4qQS-HBsMBus6P6WGPyf-t4LnkPeUzdozBfWniRW7h8HotTZw/exec";
 
+    // إعدادات Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB5-N26tSSLfTyru_NMpSbJ97yKxcxb2PU",
       authDomain: "ordersnotification-9e391.firebaseapp.com",
@@ -93,9 +94,25 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    Notification.requestPermission().then((perm) => {
-      if (perm === 'granted') messaging.getToken().then(t => console.log('FCM Token:', t));
-    });
+    // طلب الإذن واشتراك الجهاز أوتوماتيكياً في قناة all_orders
+    function initNotifications() {
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          messaging.getToken().then((token) => {
+            console.log('FCM Token:', token);
+            fetch(`https://iid.googleapis.com/iid/v1/${token}/rel/topics/all_orders`, {
+              method: 'POST',
+              headers: {
+                'Authorization': 'key=BEyENWMNZy8u5eaOSenFuRTWeEVbIJzRKWYgmZdujJ3BPUxHleJOrNTn_WQwxJlgjjzrrUbn52LIvzSzHsVC_xg',
+                'Content-Type': 'application/json'
+              }
+            });
+          });
+        }
+      });
+    }
+
+    initNotifications();
 
     messaging.onMessage((payload) => {
       alert(`🚨 ${payload.notification.title}\n${payload.notification.body}`);
@@ -147,8 +164,8 @@
     function selectOrder(item) {
       document.getElementById('rowIndex').value = item.rowIndex;
       document.getElementById('address').value = item.address || '';
+      document.getElementById('orderDetails').value = item.orderDetails || '';
       
-      // تحديث بيانات الهيدر العلوية (الاسم والمبلغ)
       document.getElementById('headerName').innerText = item.name || 'غير مسجل';
       document.getElementById('headerAmount').innerText = (item.amount || '0') + ' جنيه';
 
