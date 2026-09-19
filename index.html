@@ -12,9 +12,17 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    
+    /* شريط تفاصيل التحويل العلوية */
     .order-summary-header { background: #e8f0fe; border-right: 5px solid #1a73e8; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
     .summary-title { font-size: 13px; color: #555; }
     .summary-value { font-size: 16px; font-weight: bold; color: #1a73e8; }
+    
+    /* كروت إحصائيات السجل */
+    .stats-container { display: flex; gap: 8px; margin-bottom: 15px; }
+    .stat-box { flex: 1; background: white; padding: 10px; border-radius: 8px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .stat-number { font-size: 16px; font-weight: bold; margin-top: 4px; }
+    
     label { font-weight: bold; margin-top: 10px; display: block; color: #333; font-size: 14px; }
     input, textarea, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
     .submit-btn { background: #28a745; color: white; font-weight: bold; border: none; margin-top: 15px; font-size: 16px; cursor: pointer; }
@@ -25,7 +33,7 @@
     .badge.pending { background: #ffc107; color: #000; }
     .badge.completed { background: #28a745; }
     .image-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    .image-gallery img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+    .image-gallery img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -35,6 +43,7 @@
     <button id="tab2-btn" onclick="switchTab('tab2'); loadOrders();">سجل الأوردرات 📋</button>
   </div>
 
+  <!-- صفحة التعديل -->
   <div id="tab1" class="tab-content active">
     <div class="card">
       <div class="order-summary-header">
@@ -64,7 +73,23 @@
     </div>
   </div>
 
+  <!-- سجل الأوردرات مع الإحصائيات -->
   <div id="tab2" class="tab-content">
+    <div class="stats-container">
+      <div class="stat-box" style="border-bottom: 3px solid #28a745;">
+        <div style="font-size: 11px; color: #555;">إجمالي الفلوس</div>
+        <div id="totalSum" class="stat-number" style="color: #28a745;">0 ج.م</div>
+      </div>
+      <div class="stat-box" style="border-bottom: 3px solid #ffc107;">
+        <div style="font-size: 11px; color: #555;">معلقة</div>
+        <div id="pendingCount" class="stat-number" style="color: #d39e00;">0</div>
+      </div>
+      <div class="stat-box" style="border-bottom: 3px solid #007bff;">
+        <div style="font-size: 11px; color: #555;">تم معالجتها</div>
+        <div id="completedCount" class="stat-number" style="color: #007bff;">0</div>
+      </div>
+    </div>
+
     <div id="ordersList">جاري تحميل الأوردرات...</div>
   </div>
 
@@ -72,7 +97,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
   <script>
-    // تم إغلاق علامة التنصيص بالشكل الصحيح
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzV3ZI3DN0km1TOfOMxc_9fqvxzZMZ_HoXr0PpHqfax4MXWiNWjE3SwVLb5t6bCmnM/exec";
 
     const firebaseConfig = {
@@ -86,18 +110,10 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // طلب الإذن واشتراك جهاز الموبايل أوتوماتيكياً في قناة all_orders
     Notification.requestPermission().then((permission) => {
       if (permission === 'granted') {
         messaging.getToken().then((token) => {
           console.log('Token ready:', token);
-          fetch(`https://iid.googleapis.com/iid/v1/${token}/rel/topics/all_orders`, {
-            method: 'POST',
-            headers: {
-              'Authorization': 'key=BEyENWMNZy8u5eaOSenFuRTWeEVbIJzRKWYgmZdujJ3BPUxHleJOrNTn_WQwxJlgjjzrrUbn52LIvzSzHsVC_xg',
-              'Content-Type': 'application/json'
-            }
-          });
         });
       }
     });
@@ -127,8 +143,22 @@
         const data = await res.json();
         container.innerHTML = "";
         
+        let totalSum = 0;
+        let pendingCount = 0;
+        let completedCount = 0;
+
         data.reverse().forEach(item => {
-          const isDone = item.status.includes("تم المعالجة");
+          const isDone = item.status && item.status.includes("تم المعالجة");
+          
+          // إحصائيات الأرقام
+          const val = parseFloat(item.amount) || 0;
+          totalSum += val;
+          if (isDone) {
+            completedCount++;
+          } else {
+            pendingCount++;
+          }
+
           const div = document.createElement('div');
           div.className = `order-item ${isDone ? 'done' : ''}`;
           div.onclick = () => selectOrder(item);
@@ -144,12 +174,18 @@
           `;
           container.appendChild(div);
         });
+
+        // تحديث كروت الإحصائيات
+        document.getElementById('totalSum').innerText = totalSum.toLocaleString() + ' ج.م';
+        document.getElementById('pendingCount').innerText = pendingCount;
+        document.getElementById('completedCount').innerText = completedCount;
+
       } catch (err) {
         container.innerHTML = "حدث خطأ في تحميل البيانات.";
       }
     }
 
-   function selectOrder(item) {
+    function selectOrder(item) {
       document.getElementById('rowIndex').value = item.rowIndex;
       document.getElementById('address').value = item.address || '';
       document.getElementById('orderDetails').value = item.orderDetails || '';
@@ -162,20 +198,17 @@
       if(item.imageUrls) {
         item.imageUrls.split('\n').forEach(url => {
           if(url.trim()) {
-            // استخراج ID الملف من رابط Drive
             let fileId = "";
             const match = url.match(/[-\w]{25,}/);
             if (match) fileId = match[0];
 
             if (fileId) {
               const img = document.createElement('img');
-              // استخدام رابط المعاينة السريع
               img.src = `https://lh3.googleusercontent.com/d/${fileId}=s400`;
               img.onerror = function() {
-                // رابط بديل في حالة تعذر الأول
                 this.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
               };
-              img.onclick = () => window.open(url, '_blank'); // فتح الصورة بحجم كامل عند الضغط عليها
+              img.onclick = () => window.open(url, '_blank');
               gallery.appendChild(img);
             }
           }
