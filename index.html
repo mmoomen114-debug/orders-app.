@@ -149,7 +149,7 @@
       }
     }
 
-    function selectOrder(item) {
+   function selectOrder(item) {
       document.getElementById('rowIndex').value = item.rowIndex;
       document.getElementById('address').value = item.address || '';
       document.getElementById('orderDetails').value = item.orderDetails || '';
@@ -158,12 +158,26 @@
 
       const gallery = document.getElementById('previewImages');
       gallery.innerHTML = "";
+      
       if(item.imageUrls) {
         item.imageUrls.split('\n').forEach(url => {
           if(url.trim()) {
-            const img = document.createElement('img');
-            img.src = url;
-            gallery.appendChild(img);
+            // استخراج ID الملف من رابط Drive
+            let fileId = "";
+            const match = url.match(/[-\w]{25,}/);
+            if (match) fileId = match[0];
+
+            if (fileId) {
+              const img = document.createElement('img');
+              // استخدام رابط المعاينة السريع
+              img.src = `https://lh3.googleusercontent.com/d/${fileId}=s400`;
+              img.onerror = function() {
+                // رابط بديل في حالة تعذر الأول
+                this.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+              };
+              img.onclick = () => window.open(url, '_blank'); // فتح الصورة بحجم كامل عند الضغط عليها
+              gallery.appendChild(img);
+            }
           }
         });
       } else {
